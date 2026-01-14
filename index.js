@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./database/db.js";
 import paymentRoutes from "./routes/payment.js";
+import studentRoutes from "./routes/studentRoutes.js";
+
 
 dotenv.config();
 connectDB();
@@ -22,6 +24,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/payment", paymentRoutes);
+app.use('/api/students', studentRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
