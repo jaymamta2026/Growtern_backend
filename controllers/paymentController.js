@@ -21,7 +21,7 @@ export const createOrder = async (req, res) => {
     }
 
     const options = {
-      amount: amount * 100,
+      amount: amount * 100, // convert to paise
       currency: "INR",
       receipt: crypto.randomBytes(10).toString("hex"),
     };
@@ -33,7 +33,7 @@ export const createOrder = async (req, res) => {
       order,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Create Order Error:", error);
     res.status(500).json({ message: "Order creation failed" });
   }
 };
@@ -43,8 +43,11 @@ export const createOrder = async (req, res) => {
  */
 export const verifyPayment = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-      req.body;
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    } = req.body;
 
     const sign = razorpay_order_id + "|" + razorpay_payment_id;
 
@@ -57,7 +60,6 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json({ message: "Invalid signature" });
     }
 
-    // Save payment in DB
     const payment = await Payment.create({
       razorpay_order_id,
       razorpay_payment_id,
@@ -70,7 +72,7 @@ export const verifyPayment = async (req, res) => {
       payment,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Verify Payment Error:", error);
     res.status(500).json({ message: "Payment verification failed" });
   }
 };

@@ -10,7 +10,12 @@ connectDB();
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "*", // later you can restrict
+    methods: ["GET", "POST"],
+  })
+);
 
 app.get("/", (req, res) => {
   res.send("Server OK");
