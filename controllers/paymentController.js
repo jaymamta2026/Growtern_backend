@@ -14,10 +14,10 @@ const razorpayInstance = new Razorpay({
  */
 export const createOrder = async (req, res) => {
   try {
-    const { amount, studentId } = req.body;
+    const { amount } = req.body;
 
-    if (!amount || !studentId) {
-      return res.status(400).json({ message: "Amount & studentId required" });
+    if (!amount) {
+      return res.status(400).json({ message: "Amount is required" });
     }
 
     const options = {
@@ -28,21 +28,12 @@ export const createOrder = async (req, res) => {
 
     const order = await razorpayInstance.orders.create(options);
 
-    // 🔗 Save payment as "created"
-    const payment = await Payment.create({
-      student: studentId,
-      amount,
-      razorpay_order_id: order.id,
-      status: "created",
-    });
-
     res.status(200).json({
       success: true,
       order,
-      paymentId: payment._id,
     });
   } catch (error) {
-    console.error("Create Order Error:", error);
+    console.error(error);
     res.status(500).json({ message: "Order creation failed" });
   }
 };
@@ -52,12 +43,8 @@ export const createOrder = async (req, res) => {
  */
 export const verifyPayment = async (req, res) => {
   try {
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      paymentId,
-    } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+      req.body;
 
     const sign = razorpay_order_id + "|" + razorpay_payment_id;
 
@@ -70,15 +57,12 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json({ message: "Invalid signature" });
     }
 
-    const payment = await Payment.findByIdAndUpdate(
-      paymentId,
-      {
-        razorpay_payment_id,
-        razorpay_signature,
-        status: "success",
-      },
-      { new: true }
-    );
+    // Save payment in DB
+    const payment = await Payment.create({
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    });
 
     res.status(200).json({
       success: true,
@@ -86,7 +70,7 @@ export const verifyPayment = async (req, res) => {
       payment,
     });
   } catch (error) {
-    console.error("Verify Payment Error:", error);
+    console.error(error);
     res.status(500).json({ message: "Payment verification failed" });
   }
 };
