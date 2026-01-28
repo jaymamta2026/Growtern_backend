@@ -3,8 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./database/db.js";
 import paymentRoutes from "./routes/payment.js";
-import studentRoutes from "./routes/studentRoutes.js";
-
+import AdminRouter from "./routes/admin.routes.js";
 
 dotenv.config();
 connectDB();
@@ -16,7 +15,7 @@ app.use(
   cors({
     origin: "*", // later you can restrict
     methods: ["GET", "POST"],
-  })
+  }),
 );
 
 app.get("/", (req, res) => {
@@ -24,7 +23,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/payment", paymentRoutes);
-app.use('/api/students', studentRoutes);
+app.use("/api/admin", AdminRouter);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
