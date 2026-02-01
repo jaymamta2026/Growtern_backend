@@ -55,9 +55,9 @@ export const verifyPayment = async (req, res) => {
       contactNumber,
       whatsappNumber,
       qualification,
+      paymentType,
       course,
       amount,
-      paymentType,
     } = req.body;
 
     // Validate all required fields
@@ -67,16 +67,17 @@ export const verifyPayment = async (req, res) => {
       !contactNumber ||
       !qualification ||
       !course ||
-      !amount
+      !amount ||
+      !paymentType
     ) {
       console.error("Missing required fields:", {
         fullName: !!fullName,
         email: !!email,
         contactNumber: !!contactNumber,
+        paymentType: !!paymentType,
         qualification: !!qualification,
         course: !!course,
         amount: !!amount,
-        paymentType: !!paymentType,
       });
       return res.status(400).json({
         message: "Missing required student details",
@@ -100,8 +101,8 @@ export const verifyPayment = async (req, res) => {
     const paymentData = {
       fullName: fullName.trim(),
       email: email.trim().toLowerCase(),
-      contactNumber: contactNumber.trim(),
       paymentType: paymentType.trim().toLowerCase(),
+      contactNumber: contactNumber.trim(),
       whatsappNumber: whatsappNumber
         ? whatsappNumber.trim()
         : contactNumber.trim(),

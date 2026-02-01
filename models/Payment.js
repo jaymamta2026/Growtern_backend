@@ -22,12 +22,12 @@ const PaymentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  interestedCourse: {
-    type: String,
-    required: true,
-  },
   paymentType: {
     typeof: String,
+    required: true,
+  },
+  interestedCourse: {
+    type: String,
     required: true,
   },
 
