@@ -53,34 +53,46 @@ export const RegisterUser = async (req, res) => {
 export const Login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
     const user = await AdminModel.findOne({ email });
     if (!user) {
       return res.status(400).json({
-        message: "User Does not exist",
+        success: false,
+        message: "User does not exist",
       });
     }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({
-        message: "InCorrect Username or Password",
+        success: false,
+        message: "Incorrect username or password",
       });
     }
-    const token = await genToken(user._id);
-    // set token in Cookie
+
+    const token = genToken(user._id);
+
+    // ✅ cookie (unchanged behavior)
     res.cookie("userToken", token, {
-      sucure: false,
+      secure: false, // true in production
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true,
     });
 
+    // ✅ remove password before sending user
+    const { password: _, ...safeUser } = user._doc;
+
     return res.status(200).json({
-      message: "Login Successfully",
-      user,
+      success: true,
+      message: "Login successfully",
+      token, // ✅ added
+      admin: safeUser, // ✅ renamed for frontend
     });
   } catch (error) {
     return res.status(500).json({
-      message: "Login error" || error,
+      success: false,
+      message: error.message || "Login error",
     });
   }
 };
