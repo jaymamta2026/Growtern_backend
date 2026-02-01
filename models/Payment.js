@@ -23,7 +23,7 @@ const PaymentSchema = new mongoose.Schema({
     required: true,
   },
   paymentType: {
-    typeof: String,
+    type: String,
     required: true,
   },
   interestedCourse: {
