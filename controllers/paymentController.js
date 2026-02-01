@@ -57,10 +57,18 @@ export const verifyPayment = async (req, res) => {
       qualification,
       course,
       amount,
+      paymentType,
     } = req.body;
 
     // Validate all required fields
-    if (!fullName || !email || !contactNumber || !qualification || !course || !amount) {
+    if (
+      !fullName ||
+      !email ||
+      !contactNumber ||
+      !qualification ||
+      !course ||
+      !amount
+    ) {
       console.error("Missing required fields:", {
         fullName: !!fullName,
         email: !!email,
@@ -68,10 +76,11 @@ export const verifyPayment = async (req, res) => {
         qualification: !!qualification,
         course: !!course,
         amount: !!amount,
+        paymentType: !!paymentType,
       });
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Missing required student details",
-        received: req.body 
+        received: req.body,
       });
     }
 
@@ -92,7 +101,10 @@ export const verifyPayment = async (req, res) => {
       fullName: fullName.trim(),
       email: email.trim().toLowerCase(),
       contactNumber: contactNumber.trim(),
-      whatsappNumber: whatsappNumber ? whatsappNumber.trim() : contactNumber.trim(),
+      paymentType: paymentType.trim().toLowerCase(),
+      whatsappNumber: whatsappNumber
+        ? whatsappNumber.trim()
+        : contactNumber.trim(),
       qualification: qualification.trim(),
       interestedCourse: course.trim(), // Note: schema uses 'interestedCourse'
       amount: Number(amount),
@@ -119,10 +131,10 @@ export const verifyPayment = async (req, res) => {
   } catch (error) {
     console.error("=== VERIFY PAYMENT ERROR ===");
     console.error(error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Payment verification failed",
       error: error.message,
-      details: error.errors || error
+      details: error.errors || error,
     });
   }
 };
