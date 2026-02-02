@@ -139,3 +139,23 @@ export const verifyPayment = async (req, res) => {
     });
   }
 };
+
+/**
+ * GET ALL PAYMENTS
+ */
+export const getAllPayments = async (req, res) => {
+  try {
+    const payments = await Payment.find().sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: payments.length,
+      payments,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch payment data",
+    });
+  }
+};

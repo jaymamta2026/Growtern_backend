@@ -10,7 +10,7 @@ const AdminRouter = express.Router();
 
 AdminRouter.post("/register", RegisterUser);
 AdminRouter.post("/login", Login);
-AdminRouter.get("/logout", LogOut);
+AdminRouter.post("/logout", LogOut); // ✅ Changed to POST (better practice)
 AdminRouter.get("/check-auth", CheckAuth);
 
 export default AdminRouter;
