@@ -44,7 +44,7 @@ export const RegisterUser = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({
-      message: "xxxxxxxxx",
+      message: error.message,
     });
   }
 };
@@ -72,22 +72,20 @@ export const Login = async (req, res) => {
 
     const token = genToken(user._id);
 
-    // ✅ cookie (unchanged behavior)
     res.cookie("userToken", token, {
-      secure: false, // true in production
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true,
+      sameSite: "none", // ✅ REQUIRED for cross-origin
+      secure: true, // ✅ REQUIRED with SameSite=None
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
     });
 
-    // ✅ remove password before sending user
     const { password: _, ...safeUser } = user._doc;
 
     return res.status(200).json({
       success: true,
       message: "Login successfully",
-      token, // ✅ added
-      admin: safeUser, // ✅ renamed for frontend
+      admin: safeUser,
     });
   } catch (error) {
     return res.status(500).json({
@@ -100,12 +98,19 @@ export const Login = async (req, res) => {
 // LogOut
 export const LogOut = async (req, res) => {
   try {
-    res.clearCookie("userToken");
+    res.clearCookie("userToken", {
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+    });
+
     return res.status(200).json({
+      success: true,
       message: "Logout Successfully",
     });
   } catch (error) {
     return res.status(500).json({
+      success: false,
       message: "LogOut Error",
     });
   }

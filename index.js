@@ -10,14 +10,19 @@ connectDB();
 
 const app = express();
 
+/* ========= MIDDLEWARE ========= */
 app.use(express.json());
+
 app.use(
   cors({
-    origin: "*", // later you can restrict
-    methods: ["GET", "POST"],
-  }),
+    origin: "http://localhost:5173",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
 );
 
+/* ========= ROUTES ========= */
 app.get("/", (req, res) => {
   res.send("Server OK");
 });
@@ -25,6 +30,7 @@ app.get("/", (req, res) => {
 app.use("/api/payment", paymentRoutes);
 app.use("/api/admin", AdminRouter);
 
+/* ========= SERVER ========= */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
