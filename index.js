@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./database/db.js";
 import paymentRoutes from "./routes/payment.js";
@@ -9,37 +10,31 @@ connectDB();
 
 const app = express();
 
+/* ========= MIDDLEWARE ========= */
 app.use(express.json());
 
-/* ===== FORCE CORS (Render Safe) ===== */
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", req.headers.origin);
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-  );
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
-  );
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://grow-back-9l48.onrender.com",
+      "https://growtern.com",
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
-
-  next();
-});
-
-/* ===== ROUTES ===== */
+/* ========= ROUTES ========= */
 app.get("/", (req, res) => {
-  res.send("🚀 Server OK");
+  res.send("Server OK");
 });
 
 app.use("/api/payment", paymentRoutes);
 app.use("/api/admin", AdminRouter);
 
-/* ===== SERVER ===== */
+/* ========= SERVER ========= */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
