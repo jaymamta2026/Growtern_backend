@@ -72,20 +72,12 @@ export const Login = async (req, res) => {
 
     const token = genToken(user._id);
 
-    // 🔥 Cookie-based auth (production safe)
-    res.cookie("userToken", token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: "/",
-    });
-
     const { password: _, ...safeUser } = user._doc;
 
     return res.status(200).json({
       success: true,
       message: "Login successfully",
+      token, // ✅ SEND TOKEN
       admin: safeUser,
     });
   } catch (error) {
