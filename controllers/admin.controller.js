@@ -74,10 +74,11 @@ export const Login = async (req, res) => {
 
     const { password: _, ...safeUser } = user._doc;
 
+    // 🔥 THIS IS THE IMPORTANT PART
     return res.status(200).json({
       success: true,
       message: "Login successfully",
-      token, // ✅ SEND TOKEN
+      token, // ✅ token MUST be sent
       admin: safeUser,
     });
   } catch (error) {
