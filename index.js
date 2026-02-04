@@ -13,32 +13,22 @@ const app = express();
 /* ========= MIDDLEWARE ========= */
 app.use(express.json());
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://growtern.com",
-  "https://www.growtern.com",
-];
-
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (Postman, mobile apps)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
+    origin: [
+      "http://localhost:5173",
+      "https://growtern.com",
+      "https://www.growtern.com",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// ✅ Preflight fix (VERY IMPORTANT)
-app.options("*", cors());
+// 🔥 Explicit preflight handling
+app.options("*", (req, res) => {
+  res.sendStatus(204);
+});
 
 /* ========= ROUTES ========= */
 app.get("/", (req, res) => {
