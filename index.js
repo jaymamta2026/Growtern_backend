@@ -1,5 +1,4 @@
 import express from "express";
-import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./database/db.js";
 import paymentRoutes from "./routes/payment.js";
@@ -10,38 +9,29 @@ connectDB();
 
 const app = express();
 
-/* ========= CORS CONFIG ========= */
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://growtern.com",
-  "https://www.growtern.com",
-];
-
 app.use(express.json());
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (Postman, mobile apps)
-      if (!origin) return callback(null, true);
+/* ===== FORCE CORS (Render Safe) ===== */
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", req.headers.origin);
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      } else {
-        console.log("❌ CORS Blocked Origin:", origin);
-        return callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
 
-// 🔥 VERY IMPORTANT (preflight fix)
-app.options("*", cors());
+  next();
+});
 
-/* ========= ROUTES ========= */
+/* ===== ROUTES ===== */
 app.get("/", (req, res) => {
   res.send("🚀 Server OK");
 });
@@ -49,7 +39,7 @@ app.get("/", (req, res) => {
 app.use("/api/payment", paymentRoutes);
 app.use("/api/admin", AdminRouter);
 
-/* ========= SERVER ========= */
+/* ===== SERVER ===== */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);

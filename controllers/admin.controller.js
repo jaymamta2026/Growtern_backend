@@ -66,16 +66,17 @@ export const Login = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({
         success: false,
-        message: "Incorrect username or password",
+        message: "Incorrect email or password",
       });
     }
 
     const token = genToken(user._id);
 
+    // 🔥 Cookie-based auth (production safe)
     res.cookie("userToken", token, {
       httpOnly: true,
-      sameSite: "none", // ✅ REQUIRED for cross-origin
-      secure: true, // ✅ REQUIRED with SameSite=None
+      secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
