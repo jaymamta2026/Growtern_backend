@@ -1,6 +1,8 @@
+// ============= server.js =============
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser"; // ✅ ADD THIS
 import connectDB from "./database/db.js";
 import paymentRoutes from "./routes/payment.js";
 import AdminRouter from "./routes/admin.routes.js";
@@ -12,7 +14,9 @@ const app = express();
 
 /* ========= MIDDLEWARE ========= */
 app.use(express.json());
+app.use(cookieParser()); // ✅ ADD THIS - Required for reading cookies
 
+// ✅ Fixed CORS configuration
 app.use(
   cors({
     origin: [
@@ -22,13 +26,9 @@ app.use(
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  }),
+    credentials: true, // ✅ CRITICAL: Allow cookies
+  })
 );
-
-// 🔥 Explicit preflight handling
-app.options("*", (req, res) => {
-  res.sendStatus(204);
-});
 
 /* ========= ROUTES ========= */
 app.get("/", (req, res) => {
