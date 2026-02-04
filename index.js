@@ -17,14 +17,16 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://grow-back-9l48.onrender.com",
       "https://growtern.com",
+      "https://www.growtern.com",
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
+
+app.options("*", cors());
 
 /* ========= ROUTES ========= */
 app.get("/", (req, res) => {
