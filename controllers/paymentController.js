@@ -2,6 +2,8 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import dotenv from "dotenv";
 import Payment from "../models/Payment.js";
+import { sendPaymentEmail } from "../util/sendEmail.js";
+
 dotenv.config();
 
 const razorpayInstance = new Razorpay({
@@ -21,7 +23,7 @@ export const createOrder = async (req, res) => {
     }
 
     const options = {
-      amount: amount * 100, // convert to paise
+      amount: amount * 100,
       currency: "INR",
       receipt: crypto.randomBytes(10).toString("hex"),
     };
@@ -33,7 +35,6 @@ export const createOrder = async (req, res) => {
       order,
     });
   } catch (error) {
-    console.error("Create Order Error:", error);
     res.status(500).json({ message: "Order creation failed" });
   }
 };
@@ -43,9 +44,6 @@ export const createOrder = async (req, res) => {
  */
 export const verifyPayment = async (req, res) => {
   try {
-    console.log("=== RECEIVED PAYMENT DATA ===");
-    console.log(JSON.stringify(req.body, null, 2));
-
     const {
       razorpay_order_id,
       razorpay_payment_id,
@@ -60,32 +58,6 @@ export const verifyPayment = async (req, res) => {
       amount,
     } = req.body;
 
-    // Validate all required fields
-    if (
-      !fullName ||
-      !email ||
-      !contactNumber ||
-      !qualification ||
-      !course ||
-      !amount ||
-      !paymentType
-    ) {
-      console.error("Missing required fields:", {
-        fullName: !!fullName,
-        email: !!email,
-        contactNumber: !!contactNumber,
-        paymentType: !!paymentType,
-        qualification: !!qualification,
-        course: !!course,
-        amount: !!amount,
-      });
-      return res.status(400).json({
-        message: "Missing required student details",
-        received: req.body,
-      });
-    }
-
-    // Verify signature
     const sign = razorpay_order_id + "|" + razorpay_payment_id;
 
     const expectedSign = crypto
@@ -97,45 +69,35 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json({ message: "Invalid signature" });
     }
 
-    // Prepare payment data exactly matching your schema
     const paymentData = {
-      fullName: fullName.trim(),
-      email: email.trim().toLowerCase(),
-      paymentType: paymentType.trim().toLowerCase(),
-      contactNumber: contactNumber.trim(),
-      whatsappNumber: whatsappNumber
-        ? whatsappNumber.trim()
-        : contactNumber.trim(),
-      qualification: qualification.trim(),
-      interestedCourse: course.trim(), // Note: schema uses 'interestedCourse'
+      fullName,
+      email,
+      paymentType,
+      contactNumber,
+      whatsappNumber: whatsappNumber || contactNumber,
+      qualification,
+      interestedCourse: course,
       amount: Number(amount),
-      razorpay_order_id: razorpay_order_id,
-      razorpay_payment_id: razorpay_payment_id,
-      razorpay_signature: razorpay_signature,
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
       paymentStatus: "SUCCESS",
     };
 
-    console.log("=== SAVING TO DATABASE ===");
-    console.log(JSON.stringify(paymentData, null, 2));
-
-    // Save to database
     const payment = await Payment.create(paymentData);
 
-    console.log("=== PAYMENT SAVED SUCCESSFULLY ===");
-    console.log(JSON.stringify(payment, null, 2));
+    // SEND EMAIL AFTER SUCCESS
+    await sendPaymentEmail(paymentData);
 
     res.status(200).json({
       success: true,
-      message: "Payment verified and student details saved successfully",
+      message: "Payment verified and email sent",
       payment,
     });
   } catch (error) {
-    console.error("=== VERIFY PAYMENT ERROR ===");
     console.error(error);
     res.status(500).json({
       message: "Payment verification failed",
-      error: error.message,
-      details: error.errors || error,
     });
   }
 };
@@ -149,12 +111,10 @@ export const getAllPayments = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      count: payments.length,
       payments,
     });
   } catch (error) {
     res.status(500).json({
-      success: false,
       message: "Failed to fetch payment data",
     });
   }
