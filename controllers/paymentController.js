@@ -2,7 +2,7 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import dotenv from "dotenv";
 import Payment from "../models/Payment.js";
-import { sendPaymentEmail } from "../util/sendEmail.js";
+// import { sendPaymentEmail } from "../util/sendEmail.js";
 
 dotenv.config();
 
@@ -86,7 +86,7 @@ export const verifyPayment = async (req, res) => {
     const payment = await Payment.create(paymentData);
 
     // SEND EMAIL AFTER SUCCESS
-    await sendPaymentEmail(paymentData);
+    // await sendPaymentEmail(paymentData);
 
     res.status(200).json({
       success: true,
