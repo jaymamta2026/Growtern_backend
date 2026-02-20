@@ -115,9 +115,6 @@ export const sendPaymentEmail = async (student) => {
                         <td style="padding: 10px 0;">
                           <span style="color: #666666; font-size: 14px;">Course Enrolled:</span>
                         </td>
-                        <td align="right" style="padding: 10px 0;">
-                          <strong style="color: #667eea; font-size: 14px;">${student.interestedCourse}</strong>
-                        </td>
                       </tr>
                     </table>
                   </td>

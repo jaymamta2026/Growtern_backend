@@ -76,7 +76,6 @@ export const verifyPayment = async (req, res) => {
       contactNumber,
       whatsappNumber: whatsappNumber || contactNumber,
       qualification,
-      interestedCourse: course,
       amount: Number(amount),
       razorpay_order_id,
       razorpay_payment_id,
