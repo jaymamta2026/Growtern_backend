@@ -11,14 +11,14 @@ const createTransporter = () => {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     throw new Error(
       "EMAIL_USER or EMAIL_PASS is missing from environment variables. " +
-        "Add them in Render → Environment.",
+        "Add them in Render → Environment."
     );
   }
 
   return nodemailer.createTransport({
-    host: "smtp.gmail.com", // explicit host (more reliable than service:"gmail")
-    port: 465, // 465 = SSL (more stable on cloud), 587 = TLS
-    secure: true, // true for port 465
+    host: "smtp.gmail.com",   // explicit host (more reliable than service:"gmail")
+    port: 465,                // 465 = SSL (more stable on cloud), 587 = TLS
+    secure: true,             // true for port 465
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS, // must be Gmail App Password (not your login password)
@@ -121,7 +121,7 @@ const buildHtmlTemplate = (student) => {
                         <td align="right" style="padding: 10px 0; border-bottom: 1px solid #e5e7eb;">
                           <strong style="color: #333333; font-size: 14px;">${value || "—"}</strong>
                         </td>
-                      </tr>`,
+                      </tr>`
                       )
                       .join("")}
                   </table>
@@ -226,12 +226,13 @@ export const sendPaymentEmail = async (student) => {
 
     console.log("Payment email sent successfully to:", student.email);
     return { success: true };
+
   } catch (error) {
     // Log the real error but DO NOT throw
     // Controller uses .catch() so this won't affect the payment response
     console.error("Email sending failed:", {
       message: error.message,
-      code: error.code, // e.g. ECONNREFUSED, EAUTH
+      code: error.code,       // e.g. ECONNREFUSED, EAUTH
       command: error.command, // e.g. AUTH, EHLO
     });
     return { success: false, error: error.message };
