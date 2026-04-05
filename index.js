@@ -1,22 +1,32 @@
 // ============= server.js =============
+
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import cookieParser from "cookie-parser"; // ✅ ADD THIS
+import cookieParser from "cookie-parser";
+import dns from "dns";
+
 import connectDB from "./database/db.js";
 import paymentRoutes from "./routes/payment.js";
 import AdminRouter from "./routes/admin.routes.js";
 
+/* ========= CONFIG ========= */
 dotenv.config();
+
+// ✅ FIX: Set DNS BEFORE DB connection (critical for MongoDB Atlas SRV)
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
+/* ========= DB CONNECTION ========= */
 connectDB();
 
+/* ========= APP INIT ========= */
 const app = express();
 
 /* ========= MIDDLEWARE ========= */
 app.use(express.json());
-app.use(cookieParser()); // ✅ ADD THIS - Required for reading cookies
+app.use(cookieParser());
 
-// ✅ Fixed CORS configuration
+// ✅ Proper CORS config
 app.use(
   cors({
     origin: [
@@ -26,7 +36,7 @@ app.use(
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true, // ✅ CRITICAL: Allow cookies
+    credentials: true,
   })
 );
 
@@ -40,6 +50,7 @@ app.use("/api/admin", AdminRouter);
 
 /* ========= SERVER ========= */
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
