@@ -13,7 +13,7 @@ import AdminRouter from "./routes/admin.routes.js";
 /* ========= CONFIG ========= */
 dotenv.config();
 
-// ✅ FIX: Set DNS BEFORE DB connection (critical for MongoDB Atlas SRV)
+// Fix: Set DNS BEFORE DB connection (critical for MongoDB Atlas SRV on Render)
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 /* ========= DB CONNECTION ========= */
@@ -26,7 +26,6 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-// ✅ Proper CORS config
 app.use(
   cors({
     origin: [
@@ -42,15 +41,21 @@ app.use(
 
 /* ========= ROUTES ========= */
 app.get("/", (req, res) => {
-  res.send("🚀 Server OK");
+  res.send("Server OK");
 });
 
 app.use("/api/payment", paymentRoutes);
 app.use("/api/admin", AdminRouter);
 
+/* ========= GLOBAL ERROR HANDLER ========= */
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ message: "Internal server error", error: err.message });
+});
+
 /* ========= SERVER ========= */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
