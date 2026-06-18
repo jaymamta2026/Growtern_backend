@@ -10,11 +10,15 @@ import connectDB from "./database/db.js";
 import paymentRoutes from "./routes/payment.js";
 import AdminRouter from "./routes/admin.routes.js";
 
+// importing email route
+import emailRoutes from "./routes/email.routes.js";
+
 /* ========= CONFIG ========= */
 dotenv.config();
 
 // Fix: Set DNS BEFORE DB connection (critical for MongoDB Atlas SRV on Render)
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
 
 /* ========= DB CONNECTION ========= */
 connectDB();
@@ -46,6 +50,9 @@ app.get("/", (req, res) => {
 
 app.use("/api/payment", paymentRoutes);
 app.use("/api/admin", AdminRouter);
+
+// using email route
+app.use("/api/email", emailRoutes);
 
 /* ========= GLOBAL ERROR HANDLER ========= */
 app.use((err, req, res, next) => {

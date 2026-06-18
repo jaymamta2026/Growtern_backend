@@ -6,7 +6,37 @@ import dotenv from "dotenv";
 import Payment from "../models/Payment.js";
 import { sendPaymentEmail } from "../util/sendEmail.js";
 
+// imported axios
+import axios from "axios";
+
 dotenv.config();
+
+
+// helper function to send data to app script
+const savePaymentToGoogleSheet = async (paymentData) => {
+  try {
+    const response =  await axios.post(
+      process.env.GOOGLE_SHEET_PAYMENT_API,
+      paymentData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response;
+
+  } catch (err) {
+  console.error("Google Sheet save failed:", err.message);
+
+  return {
+    data: {
+      success: false,
+      message: err.message,
+    },
+  };
+}
+};
 
 /* ========= VALIDATE ENV VARS ON STARTUP ========= */
 if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_SECRET) {
@@ -104,13 +134,23 @@ export const verifyPayment = async (req, res) => {
       paymentStatus: "SUCCESS",
     };
 
-    const payment = await Payment.create(paymentData);
+    // const payment = await Payment.create(paymentData);
+
+    // save to google app script 
+    const sheetRes = await savePaymentToGoogleSheet(paymentData);
+
+    if (!sheetRes.data.success) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to save payment in Google Sheet",
+      });
+    }
 
     /* ---- 4. Respond immediately — don't let email delay/block response ---- */
     res.status(200).json({
       success: true,
       message: "Payment verified successfully",
-      payment,
+      // payment,
     });
 
     /* ---- 5. Send email AFTER response (non-blocking) ---- */
