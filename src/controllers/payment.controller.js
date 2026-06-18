@@ -3,8 +3,8 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 import dotenv from "dotenv";
-import Payment from "../models/Payment.js";
-import { sendPaymentEmail } from "../../util/sendEmail.js";
+import Payment from "../models/payment.model.js";
+import { sendPaymentEmail } from "../utils/sendEmail.js";
 
 // imported axios
 import axios from "axios";

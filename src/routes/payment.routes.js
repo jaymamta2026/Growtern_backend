@@ -1,9 +1,5 @@
 import express from "express";
-import {
-  createOrder,
-  verifyPayment,
-  getAllPayments,
-} from "../controllers/paymentController.js";
+import { createOrder, verifyPayment, getAllPayments } from "../controllers/payment.controller.js";
 
 const router = express.Router();
 
