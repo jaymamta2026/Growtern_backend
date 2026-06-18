@@ -1,0 +1,69 @@
+// ============= server.js =============
+
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import dns from "dns";
+
+import connectDB from "./config/database.js";
+import paymentRoutes from "./routes/payment.routes.js";
+import AdminRouter from "./routes/admin.routes.js";
+
+// importing email route
+import emailRoutes from "./routes/email.routes.js";
+
+/* ========= CONFIG ========= */
+dotenv.config();
+
+// Fix: Set DNS BEFORE DB connection (critical for MongoDB Atlas SRV on Render)
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
+
+/* ========= DB CONNECTION ========= */
+connectDB();
+
+/* ========= APP INIT ========= */
+const app = express();
+
+/* ========= MIDDLEWARE ========= */
+app.use(express.json());
+app.use(cookieParser());
+
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://growtern.com",
+      "https://www.growtern.com",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+
+/* ========= ROUTES ========= */
+app.get("/", (req, res) => {
+  res.send("Server OK");
+});
+
+app.use("/api/payment", paymentRoutes);
+app.use("/api/admin", AdminRouter);
+
+// using email route
+app.use("/api/email", emailRoutes);
+
+/* ========= GLOBAL ERROR HANDLER ========= */
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ message: "Internal server error", error: err.message });
+});
+
+/* ========= SERVER ========= */
+export default app;
+// const PORT = process.env.PORT || 5000;
+
+// app.listen(PORT, () => {
+//   console.log(`Server running on port ${PORT}`);
+// });

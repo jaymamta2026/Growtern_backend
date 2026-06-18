@@ -1,6 +1,6 @@
 // ============= auth.controller.js =============
 import bcrypt from "bcryptjs";
-import genToken from "../util/token.js";
+import genToken from "../utils/token.js";
 import jwt from "jsonwebtoken";
 import AdminModel from "../models/admin.model.js";
 

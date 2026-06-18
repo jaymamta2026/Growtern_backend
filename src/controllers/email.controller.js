@@ -1,4 +1,4 @@
-import { sendLeadEmail } from "../util/sendLeadEmail.js";
+import { sendLeadEmail } from "../../util/sendLeadEmail.js";
 
 export const sendLeadEmailController = async (req, res) => {
   try {
