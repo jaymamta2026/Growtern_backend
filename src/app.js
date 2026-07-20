@@ -8,7 +8,8 @@ import dns from "dns";
 
 import connectDB from "./config/database.js";
 import paymentRoutes from "./routes/payment.routes.js";
-import AdminRouter from "./routes/admin.routes.js";
+// import AdminRouter from "./routes/admin.routes.js";
+import authRoutes from "./routes/auth.routes.js";
 
 // importing email route
 import emailRoutes from "./routes/email.routes.js";
@@ -49,7 +50,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/payment", paymentRoutes);
-app.use("/api/admin", AdminRouter);
+// app.use("/api/admin", AdminRouter);
+app.use("/api/admin/auth", authRoutes);
 
 // using email route
 app.use("/api/email", emailRoutes);
