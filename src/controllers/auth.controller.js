@@ -50,7 +50,7 @@ export const registerAdmin = async (req, res) => {
   }
 };
 
-/* Login Admin */
+/* Login Admin controller */
 export const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;

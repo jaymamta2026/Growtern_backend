@@ -16,7 +16,6 @@ const router = express.Router();
 router.post("/login", loginAdmin);
 
 // Protected Routes
-
 // Register New Admin (Only Logged-in Admin can create another admin)
 router.post("/register", protectAdmin, registerAdmin);
 
