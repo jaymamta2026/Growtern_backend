@@ -5,11 +5,12 @@ export const sendLeadEmailController = async (req, res) => {
     const {
       email,
       fullName,
+      phone,
       course,
       emailType,
     } = req.body;
 
-    console.log(req.body)
+    console.log("output = ",req.body)
 
     if (!email) {
       return res.status(400).json({
@@ -21,6 +22,7 @@ export const sendLeadEmailController = async (req, res) => {
     const result = await sendLeadEmail({
       email,
       fullName,
+      phone,
       course,
       emailType,
     });
