@@ -1,7 +1,13 @@
-import path from "path";
-import { transporter } from "./transporter.js";
+import { Resend } from "resend";
 import { getEmailContent } from "./emailTemplates.js";
 
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// While testing without a verified domain on resend.com/domains,
+// you MUST use this exact address as the "from" sender.
+// Once your domain (growtern.com) is verified, change this to:
+// const FROM_ADDRESS = "Growtern Academy <noreply@growtern.com>";
+const FROM_ADDRESS = "Growtern Academy <onboarding@resend.dev>";
 
 export const sendLeadEmail = async ({
   email,
@@ -11,6 +17,12 @@ export const sendLeadEmail = async ({
   emailType,
 }) => {
   try {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error(
+        "RESEND_API_KEY is missing from environment variables. " +
+          "Add it in Render → Environment (and locally in your .env file)."
+      );
+    }
 
     const template = getEmailContent({
       emailType,
@@ -57,18 +69,26 @@ export const sendLeadEmail = async ({
       </div>
     `;
 
-    // email to std trnasporter
-    await transporter.sendMail({
-      from: `"Growtern Academy" <${process.env.EMAIL_USER}>`,
+    // ---- Email to the student/lead ----
+    const { error: studentError } = await resend.emails.send({
+      from: FROM_ADDRESS,
       to: email,
       subject: template.title,
       html,
     });
 
-    // email to us Send notification email to Growtern Team
+    if (studentError) {
+      console.error("Lead email (student) error:", studentError);
+      return {
+        success: false,
+        message: studentError.message || JSON.stringify(studentError),
+      };
+    }
 
+    // ---- Notification email to Growtern Team ----
     let adminSubject = `🔥 New ${emailType} Submission - ${fullName}`;
     let adminHtml;
+
     if (emailType === "referral") {
 
       adminSubject = "📩 New Referral Form Submission";
@@ -169,12 +189,21 @@ export const sendLeadEmail = async ({
   `;
     }
 
-    await transporter.sendMail({
-      from: `"Growtern Academy" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER,
+    // Notification goes to your own team inbox — set ADMIN_EMAIL in your env,
+    // falling back to EMAIL_USER if you still have that variable set.
+    const adminRecipient = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+
+    const { error: adminError } = await resend.emails.send({
+      from: FROM_ADDRESS,
+      to: adminRecipient,
       subject: adminSubject,
       html: adminHtml,
     });
+
+    if (adminError) {
+      // Student email already succeeded, so log this but don't fail the whole request
+      console.error("Lead email (admin notification) error:", adminError);
+    }
 
     return {
       success: true,

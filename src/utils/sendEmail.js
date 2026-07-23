@@ -1,41 +1,12 @@
 // ============= util/sendEmail.js =============
+// NOTE: This version uses Resend (HTTP API) instead of Nodemailer/SMTP.
+// Render's free tier (and many cloud hosts) block outbound SMTP ports
+// (465/587), causing ENETUNREACH / ETIMEDOUT / Connection timeout errors.
+// Resend sends email over normal HTTPS, so it avoids that problem entirely.
 
-import nodemailer from "nodemailer";
-import dns from "dns";
+import { Resend } from "resend";
 
-// Render's network often can't reach IPv6 — force IPv4 DNS resolution
-// This must run before any SMTP connection is created
-dns.setDefaultResultOrder("ipv4first");
-
-/* =========================================================
-   CREATE TRANSPORTER
-   - Explicitly set host + port instead of service:"gmail"
-   - This is more reliable on cloud servers like Render
-   - family: 4 forces IPv4 (fixes ENETUNREACH on IPv6 addresses)
-   ========================================================= */
-const createTransporter = () => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error(
-      "EMAIL_USER or EMAIL_PASS is missing from environment variables. " +
-        "Add them in Render → Environment."
-    );
-  }
-
-  return nodemailer.createTransport({
-    host: "smtp.gmail.com",   // explicit host (more reliable than service:"gmail")
-    port: 465,                // 465 = SSL (more stable on cloud), 587 = TLS
-    secure: true,             // true for port 465
-    family: 4,                // force IPv4 - fixes ENETUNREACH on cloud hosts like Render
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS, // must be Gmail App Password (not your login password)
-    },
-    // Increase timeouts for cloud servers (Render can be slow on cold start)
-    connectionTimeout: 10000, // 10 seconds
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-  });
-};
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /* =========================================================
    EMAIL TEMPLATE
@@ -198,7 +169,7 @@ const buildHtmlTemplate = (student) => {
                   <p style="margin: 0 0 20px 0; color: #666666; font-size: 14px;">Bhubaneswar, Odisha</p>
                   <p style="margin: 0; color: #999999; font-size: 12px;">
                     This is an automated email. Please do not reply to this message.<br/>
-                    For queries, contact us at ${process.env.EMAIL_USER}
+                    For queries, contact us at ${process.env.EMAIL_USER || "support@growtern.com"}
                   </p>
                 </td>
               </tr>
@@ -213,25 +184,35 @@ const buildHtmlTemplate = (student) => {
 };
 
 /* =========================================================
-   SEND PAYMENT EMAIL
+   SEND PAYMENT EMAIL (via Resend HTTP API)
    - Does NOT throw — logs error and returns { success: false }
    - Controller handles non-blocking call via .catch()
    ========================================================= */
 export const sendPaymentEmail = async (student) => {
   try {
-    const transporter = createTransporter();
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error(
+        "RESEND_API_KEY is missing from environment variables. " +
+          "Add it in Render → Environment (and locally in your .env file)."
+      );
+    }
 
-    // Verify SMTP connection before sending (helps catch credential issues early)
-    await transporter.verify();
-
-    await transporter.sendMail({
-      from: `"Growtern Academy" <${process.env.EMAIL_USER}>`,
+    const { data, error } = await resend.emails.send({
+      // While testing without a verified domain, you must use this address.
+      // Once you verify your own domain on resend.com/domains, change this to:
+      // "Growtern Academy <noreply@growtern.com>"
+      from: "Growtern Academy <onboarding@resend.dev>",
       to: student.email,
       subject: "✓ Payment Successful - Growtern Academy",
       html: buildHtmlTemplate(student),
     });
 
-    console.log("Payment email sent successfully to:", student.email);
+    if (error) {
+      console.error("Email sending failed (Resend error):", error);
+      return { success: false, error: error.message || JSON.stringify(error) };
+    }
+
+    console.log("Payment email sent successfully to:", student.email, "id:", data?.id);
     return { success: true };
 
   } catch (error) {
@@ -239,8 +220,6 @@ export const sendPaymentEmail = async (student) => {
     // Controller uses .catch() so this won't affect the payment response
     console.error("Email sending failed:", {
       message: error.message,
-      code: error.code,       // e.g. ECONNREFUSED, EAUTH, ENETUNREACH
-      command: error.command, // e.g. AUTH, EHLO
     });
     return { success: false, error: error.message };
   }
