@@ -1,11 +1,17 @@
 // ============= util/sendEmail.js =============
 
 import nodemailer from "nodemailer";
+import dns from "dns";
+
+// Render's network often can't reach IPv6 — force IPv4 DNS resolution
+// This must run before any SMTP connection is created
+dns.setDefaultResultOrder("ipv4first");
 
 /* =========================================================
    CREATE TRANSPORTER
    - Explicitly set host + port instead of service:"gmail"
    - This is more reliable on cloud servers like Render
+   - family: 4 forces IPv4 (fixes ENETUNREACH on IPv6 addresses)
    ========================================================= */
 const createTransporter = () => {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
@@ -19,6 +25,7 @@ const createTransporter = () => {
     host: "smtp.gmail.com",   // explicit host (more reliable than service:"gmail")
     port: 465,                // 465 = SSL (more stable on cloud), 587 = TLS
     secure: true,             // true for port 465
+    family: 4,                // force IPv4 - fixes ENETUNREACH on cloud hosts like Render
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS, // must be Gmail App Password (not your login password)
@@ -232,7 +239,7 @@ export const sendPaymentEmail = async (student) => {
     // Controller uses .catch() so this won't affect the payment response
     console.error("Email sending failed:", {
       message: error.message,
-      code: error.code,       // e.g. ECONNREFUSED, EAUTH
+      code: error.code,       // e.g. ECONNREFUSED, EAUTH, ENETUNREACH
       command: error.command, // e.g. AUTH, EHLO
     });
     return { success: false, error: error.message };
